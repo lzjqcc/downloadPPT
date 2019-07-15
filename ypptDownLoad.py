@@ -98,7 +98,7 @@ def downloadOnePagePPT(href, classifyName):
             #     f.write(ppt.data)
             # f.close()
             # break;
-mobanPage = getPage('/moban/');
+mobanPage = getPage('/jieri/');
 menu = mobanPage.select('.menu ul')[0];
 for a in menu.select('a'):
     if a.string != '动态模版':
