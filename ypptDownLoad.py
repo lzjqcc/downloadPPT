@@ -4,6 +4,7 @@ from proxy import Proxy;
 from bs4 import BeautifulSoup;
 import os;
 import threading;
+from fileDao import fileDAO;
 yppturl = 'http://www.ypppt.com/'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Mobile Safari/537.36',
@@ -11,7 +12,7 @@ headers = {
     "Upgrade-Insecure-Requests":1,
     "ACCPT":'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
 }
-rootPath = "D:\\ppt\\";
+rootPath = "D:\\ppt背景\\";
 fileSplit ="\\";
 
 def getRequestContent(url,proxy=False):
@@ -23,7 +24,7 @@ def getRequestContent(url,proxy=False):
     r = http.request('GET', getUrl(url));
     return r.data.decode("utf-8");
 def getUrl(url):
-    if url.__contains__(yppturl):
+    if url.__contains__('http'):
         return url;
     return yppturl + url;
 
@@ -39,8 +40,8 @@ def getHttp():
 def getPage(url, proxy = False):
     return BeautifulSoup(getRequestContent(url, proxy), 'lxml');
 def download(classifyName,classifyHref):
-    if not os.path.exists(rootPath + classifyName):
-        os.mkdir(rootPath + classifyName);
+    # if not os.path.exists(rootPath + classifyName):
+    #     os.mkdir(rootPath + classifyName);
     downloadAll(classifyHref,classifyHref, classifyName, 0)
 def getMaxPageIndex(pageLinkAs):
     pageLinkAsReverse = pageLinkAs[::-1];
@@ -75,7 +76,6 @@ def downloadAll(href,preFixHref, classifyName, currentPage):
 
 def downloadOnePagePPT(href, classifyName):
     soup = getPage(href);
-    print(soup)
     posts = soup.select(".posts")[0];
     for a in posts.select("a"):
         if a.string is not None:
@@ -88,19 +88,25 @@ def downloadOnePagePPT(href, classifyName):
             downButtnHref = downButtn.attrs["href"];
             downLoadPage = getPage(downButtnHref);
             down = downLoadPage.select(" li a")[0];
-            print(down.attrs['href'])
-            ppt = getRequest(down.attrs['href']);
-            print("下载:"+name)
-            with open(rootPath + classifyName + fileSplit + name + ".rar", "wb") as f:
-                f.write(ppt.data)
-            f.close()
-mobanPage = getPage('/moban');
+            # print(down.attrs['href'])
+            # ppt = getRequest(down.attrs['href']);
+
+            print(classifyName + "下载:"+name);
+            downHref = down.attrs['href']
+            fileDAO().insertPPTFile(group=classifyName,fileName= name, downLoadURL=getUrl(downHref))
+            # with open(rootPath + classifyName + fileSplit + name + ".rar", "wb") as f:
+            #     f.write(ppt.data)
+            # f.close()
+            # break;
+mobanPage = getPage('/moban/');
 menu = mobanPage.select('.menu ul')[0];
 for a in menu.select('a'):
-    if a.string != '动态模板':
+    if a.string != '动态模版':
         classifyName = a.string;
         classifyHref = a.attrs['href'];
-        threading.Thread(target=download, args=(classifyName, classifyHref)).start()
+        #threading.Thread(target=download, args=(classifyName, classifyHref)).start()
+        download(classifyName, classifyHref)
+
 
 
 
