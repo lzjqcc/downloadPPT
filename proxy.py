@@ -1,9 +1,14 @@
 import urllib3;
+from bs4 import BeautifulSoup
 
 
 class Proxy:
-
-
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Mobile Safari/537.36',
+        "HOST": "www.ypppt.com",
+        "Upgrade-Insecure-Requests": 1,
+        "ACCPT": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+    }
     ips = [
         '159.192.253.61:8080',
         '110.36.239.237:8080',
@@ -36,7 +41,7 @@ class Proxy:
         '154.197.128.226:3128',
         '212.175.98.171:8080']
 
-    def getProxyIP(self):
+    def _getProxyIP(self):
         for ip in self.ips:
             proxy = urllib3.ProxyManager("http://" + ip)
             urllib3.disable_warnings();
@@ -49,11 +54,36 @@ class Proxy:
         return None;
 
 
-    def getProxyHttp(self, heads = None):
-        ip = self.getProxyIP();
+    def _getProxyHttp(self, heads = None):
+        ip = self._getProxyIP();
         if ip is None:
             proxy = urllib3.PoolManager;
         else:
             proxy = urllib3.ProxyManager("http://" + ip)
         proxy.headers = heads;
         return proxy;
+
+    def getRequestContent(self, url, proxy=False):
+        if proxy:
+            http = self._getProxyHttp(self.headers);
+        else:
+            http = self._getHttp();
+        r = http.request('GET', url);
+        return r.data.decode("utf-8");
+
+    def _getHttp(self):
+        http = urllib3.PoolManager();
+        http.headers = self.headers;
+        return http;
+
+    def getRequest(self, url, proxy = False):
+        if proxy:
+            http = self._getProxyHttp(self.headers);
+        else:
+            http = self._getHttp();
+        return http.request("GET", url);
+
+
+
+    def getPage(self , url, proxy=False):
+        return BeautifulSoup(self.getRequestContent(url, proxy), 'lxml');
