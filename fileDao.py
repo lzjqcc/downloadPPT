@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pymysql;
 
 
@@ -32,4 +34,39 @@ class fileDAO:
     def selectAllFile(self):
         self._cursor.execute(self._selectSQL)
         return self._cursor.fetchall();
+    def insertFileTemplate(self,size,groupId,tagId,fileFormat, fileName):
+        selectSql = 'select * from tb_file_template where name = %s';
+        self._cursor.execute(selectSql, [fileName]);
+        results = self._cursor.fetchall();
+        if len(results) > 0:
+            return results[0][0];
+        sql = "insert into tb_file_template (group_id, tag_id, file_size,file_format, insert_time, update_time, name) value(%s,%s,%s,%s,%s, %s, %s)";
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S");
+        self._cursor.execute(sql,[groupId, tagId, size, fileFormat, dt, dt, fileName])
+    def insertTag(self, name, groupId):
+        selectSql = 'select * from tb_tag where name = %s';
+        self._cursor.execute(selectSql, [name]);
+        results = self._cursor.fetchall();
+        if len(results) > 0:
+            return results[0][0];
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S");
+        sql = "insert into tb_tag (name, group_id, insert_time, update_time) value (%s, %s, %s, %s)";
+        self._cursor.execute(sql,[name, groupId, dt, dt])
+        id = self._cursor.lastrowid;
+        self._conn.commit();
+        return id;
+    def insertGroup(self, name):
+        selectSql = 'select * from tb_group where name = %s';
+        self._cursor.execute(selectSql, [name]);
+        results = self._cursor.fetchall();
+        if len(results) > 0:
+            return results[0][0];
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S");
+        sql = "insert into tb_group (name, insert_time, update_time ) value (%s, %s, %s)";
+        self._cursor.execute(sql, [name, dt, dt])
+        id = self._cursor.lastrowid;
+        self._conn.commit();
+        return id;
+
+
 
